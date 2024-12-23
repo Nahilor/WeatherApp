@@ -1,6 +1,6 @@
 ﻿namespace WeatherApp
 {
-    partial class Form1
+    partial class WeatherGui
     {
         /// <summary>
         ///  Required designer variable.
@@ -30,14 +30,13 @@
         {
             SuspendLayout();
             // 
-            // Form1
+            // WeatherGui
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(288, 427);
-            Name = "Form1";
+            ClientSize = new Size(288, 441);
+            Name = "WeatherGui";
             Text = "Weather";
-            Load += Form1_Load;
             ResumeLayout(false);
         }
 
