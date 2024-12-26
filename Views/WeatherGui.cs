@@ -1,27 +1,32 @@
 using System.Collections;
 using System.Drawing.Drawing2D;
 
+
 namespace WeatherApp
 {
     public partial class WeatherGui : Form
     {
-        int GlobalXPoint = 20;
-        static System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
-        bool menubarpressed = false;
+        private System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+        private int GlobalXPoint = 20;
+        private bool menubarpressed = false;
+        private static bool isRenderingPaused = false;
+        private int offsetX, offsetY;
+        private bool isDragging = false;
 
         public WeatherGui()
         {
+            timer.Interval = 1;
             InitializeComponent();
             FormBorderStyle = FormBorderStyle.None;
             Size = new System.Drawing.Size(300, 500);
             InitGui();
-            this.DoubleBuffered = true;
+            this.DoubleBuffered = false;
         }
 
         public void InitGui()
         {
             // Main panel
-            Panel Mainpnl = new Panel();
+            MainPanel Mainpnl = new MainPanel();
             Mainpnl.Width = this.Width;
             Mainpnl.Height = this.Height;
             Mainpnl.BackColor = Color.Transparent;
@@ -48,7 +53,7 @@ namespace WeatherApp
            
 
             // Hamburger menu button
-            Icon sidebarbtn = new Icon();
+            Picture sidebarbtn = new Picture();
             sidebarbtn.BackColor = Color.Transparent;
             sidebarbtn.setImage("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\Hamburger Menu.png", 30, 30);
             ComboBox CityList = new ComboBox()
@@ -118,67 +123,145 @@ namespace WeatherApp
             {
                 Text = "25\u00B0C",
                 Font = new Font("Roboto", 35, FontStyle.Bold),
-                Location = new Point(18, 70),
+                Location = new Point(80, 70),
                 Height = 50,
                 ForeColor = Color.White
             };
 
+            // Calvin/Fahrenheit
+
             //Weather type icon
-            List<Icon> WeatherIcons = new List<Icon>();
+            List<Picture> WeatherIcons = new List<Picture>();
             // 1. Sunny
             WeatherIcons.Add
             (
-                new Icon().CreateIcon
+                new Picture().CreateIcon
                 (
-                    50, 50, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\sun.png", new Point(200, 68)
+                    60, 60, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\sun.png", new Point(18, 64)
                 )
             );
             // 2. cloudy
             WeatherIcons.Add
             (
-                new Icon().CreateIcon
+                new Picture().CreateIcon
                 (
-                    50, 50, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\cloudy.png", new Point(200, 68)
+                    60, 60, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\cloudy.png", new Point(18, 64)
                 )
             );
             // 3. Windy
             WeatherIcons.Add
             (
-                new Icon().CreateIcon
+                new Picture().CreateIcon
                 (
-                    50, 50, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\windy.png", new Point(200, 68)
+                    60, 60, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\windy.png", new Point(18, 64)
                 )
             );
             // 4. Snowy
             WeatherIcons.Add
             (
-                new Icon().CreateIcon
+                new Picture().CreateIcon
                 (
-                    50, 50, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\snowy.png", new Point(200, 68)
+                    60, 60, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\snowy.png", new Point(18, 64)
                 )
             );
             // 5. Rainy
             WeatherIcons.Add
             (
-                new Icon().CreateIcon
+                new Picture().CreateIcon
                 (
-                    50, 50, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\rainy-day.png", new Point(200, 68)
+                    60, 60, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\rainy-day.png", new Point(18, 64)
                 )
             );
+            // this is dependent on api data but for now i am using 0 index for sunny 
+            Mainpnl.Controls.Add(WeatherIcons.ElementAt(1));
+
+
+            // Minimize and close 
+            Picture minimizebtn = new Picture();
+            minimizebtn.setImage("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\delete.png", 17, 17);
+            minimizebtn.Location = new Point(250, 15);
+            minimizebtn.MouseClick += (sender, e) =>
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    this.WindowState = FormWindowState.Minimized;
+                }
+            };
+            Picture maximizebtn = new Picture();
+            maximizebtn.setImage("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\remove.png", 17, 17);
+            maximizebtn.Location = new Point(270, 15);
+            maximizebtn.MouseClick += (sender, e) =>
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    this.Close();
+                }
+            };
+            Mainpnl.Controls.Add(maximizebtn);
+            Mainpnl.Controls.Add(minimizebtn);
+
+            // Moving of window 
+            Mainpnl.MouseDown += (sender, e) =>
+            {
+                timer.Tick += Timer_Tick;
+                if (e.Button == MouseButtons.Left)
+                {
+                    // Capture initial mouse position and set drag flag
+                    offsetX = MousePosition.X - this.Location.X;
+                    offsetY = MousePosition.Y - this.Location.Y;
+
+                    // Toggle rendering or perform any other actions needed
+                    ToggleRendering();
+
+                    // Start the timer for dragging
+                    isDragging = true;
+                    timer.Start();
+                }
+            };
+
+            // Handle MouseUp event to stop dragging
+            Mainpnl.MouseUp += (sender, e) =>
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    // Stop dragging and the timer
+                    isDragging = false;
+                    timer.Stop();
+
+                    // Toggle rendering back
+                    ToggleRendering();
+                }
+            };
+
+
 
             Controls.Add(Mainpnl);
             Mainpnl.Controls.Add(sidebarbtn);
             Mainpnl.Controls.Add(locationlbl);
-            Mainpnl.Controls.Add(WeatherIcons.ElementAt(4));
+            
             Controls.Add(Menupnl);
             Menupnl.Controls.Add(CityList);
             Mainpnl.Controls.Add(templbl);
         }
 
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            if (isDragging)
+            {
+                // Update the form's location based on the cursor's position
+                this.Location = new Point(Cursor.Position.X - offsetX, Cursor.Position.Y - offsetY);
+            }
+        }
+
+
         // Hamburger menu
-        class Icon : PictureBox
+        class Picture : PictureBox
         {
             Bitmap? icon;
+            public Picture()
+            {
+                DoubleBuffered = true;
+            }
             public void setImage(String fileDestination, int xSize, int ySize)
             {
                 if (icon != null)
@@ -204,18 +287,40 @@ namespace WeatherApp
                 Image = (Image)icon;
             }
             
-            public Icon CreateIcon(int xSize, int ySize, String fileDestination, Point point)
+            public Picture CreateIcon(int xSize, int ySize, String fileDestination, Point point)
             {
-                Icon icon = new Icon();
+                Picture icon = new Picture();
                 icon.Location = point;
                 icon.setImage(fileDestination, xSize, ySize);
                 return icon;
+            }
+        }
+        // Render Controller
+        private void ToggleRendering()
+        {
+            isRenderingPaused = !isRenderingPaused;
+        }
+
+        class MainPanel : Panel
+        {
+            public MainPanel()
+            {
+                DoubleBuffered = true;
+            }
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                base.OnPaint(e);
+                if (isRenderingPaused) return;
             }
         }
 
         // Menu panel
         class MenuPanel : Panel
         {
+            public MenuPanel()
+            {
+                DoubleBuffered = true;
+            }
             protected override void OnPaint(PaintEventArgs e)
             {
                 base.OnPaint(e);
@@ -229,15 +334,17 @@ namespace WeatherApp
                 path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90);
                 path.CloseFigure();
                 this.Region = new Region(path);
+                if (isRenderingPaused) return;
             }
         }
 
-        // Gradient Background
+
+
+        // Gradient Background On Form
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-
-            Rectangle gradientRect = new Rectangle(0, 0, this.ClientSize.Width, this.ClientSize.Height);
+            Rectangle gradientRect = new Rectangle(0, 0, 300, 500);
             LinearGradientBrush brush = new LinearGradientBrush
                 (
                     gradientRect, 
@@ -259,7 +366,8 @@ namespace WeatherApp
             path.AddArc(rect.Right - radius, rect.Bottom - radius, radius, radius, 0, 90);
             path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90);
             path.CloseFigure();
-            this.Region = new Region(path);      
+            this.Region = new Region(path);
+            if (isRenderingPaused) return;
         }
     }
 }
