@@ -32,6 +32,7 @@
             // 
             // WeatherGui
             // 
+            DoubleBuffered = true;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(288, 441);

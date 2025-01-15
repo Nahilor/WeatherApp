@@ -1,6 +1,6 @@
-using System.Collections;
 using System.Drawing.Drawing2D;
-using Microsoft.VisualBasic.ApplicationServices;
+using System.Windows.Forms;
+using WeatherApp.Views;
 
 
 namespace WeatherApp
@@ -9,14 +9,16 @@ namespace WeatherApp
     {
         private int GlobalXPoint = 20;
         private bool menubarpressed = false;
-        private static bool isRenderingPaused = false;
+        public static bool isRenderingPaused = false;
         private int offsetX, offsetY;
         private bool isDragging = false;
+        private String[] Days =  { "Sunday", "Monday",  "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+        public static int currentday = (int) DateTime.Now.DayOfWeek;
 
         public WeatherGui()
         {
-            this.DoubleBuffered = true;
             InitializeComponent();
+            this.DoubleBuffered = true;
             FormBorderStyle = FormBorderStyle.None;
             Size = new System.Drawing.Size(300, 500);
             InitGui();
@@ -38,6 +40,7 @@ namespace WeatherApp
             Menupnl.Width = 0;
             Menupnl.BackColor = Color.FromArgb(110, 120, 255);
 
+            
 
             // Location Label
             Label locationlbl = new Label();
@@ -147,63 +150,60 @@ namespace WeatherApp
             {
                 if (TempScaleToggle.Text == "°C")
                 {
-                    templbl.Text = Convert.ToString(CtoF(Convert.ToInt32(templbl.Text.Replace('°', ' ')))) + "°";
+                    templbl.Text = Convert.ToString(Functions.CtoF(Convert.ToInt32(templbl.Text.Replace('°', ' ')))) + "°";
                     TempScaleToggle.Text = "°F";
                 }
 
                 else
                 {
-                    templbl.Text = Convert.ToString(FtoC(Convert.ToInt32(templbl.Text.Replace('°', ' ')))) + "°";
+                    templbl.Text = Convert.ToString(Functions.FtoC(Convert.ToInt32(templbl.Text.Replace('°', ' ')))) + "°";
                     TempScaleToggle.Text = "°C";
                 }
             };
 
-            
 
-            //Weather type icon
-            List<Picture> WeatherIcons = new List<Picture>();
-            // 1. Sunny
-            WeatherIcons.Add
-            (
-                new Picture().CreateIcon
-                (
-                    60, 60, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\sun.png", new Point(18, 64)
-                )
-            );
-            // 2. cloudy
-            WeatherIcons.Add
-            (
-                new Picture().CreateIcon
-                (
-                    60, 60, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\cloudy.png", new Point(18, 64)
-                )
-            );
-            // 3. Windy
-            WeatherIcons.Add
-            (
-                new Picture().CreateIcon
-                (
-                    60, 60, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\windy.png", new Point(18, 64)
-                )
-            );
-            // 4. Snowy
-            WeatherIcons.Add
-            (
-                new Picture().CreateIcon
-                (
-                    60, 60, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\snowy.png", new Point(18, 64)
-                )
-            );
-            // 5. Rainy
-            WeatherIcons.Add
-            (
-                new Picture().CreateIcon
-                (
-                    60, 60, "C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\rainy-day.png", new Point(18, 64)
-                )
-            );
-            // this is dependent on api data but for now i am using 0 index for sunny 
-            Mainpnl.Controls.Add(WeatherIcons.ElementAt(0));
+
+            // Weather type icons
+            List<PictureBox> WeatherIcons = new List<PictureBox>();
+
+            // Icon data for initialization
+            var iconData = new List<(string FilePath, string IconName)>
+            {
+                ("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\sun.png", "Sunny"),
+                ("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\cloudy.png", "Cloudy"),
+                ("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\windy.png", "Windy"),
+                ("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\snowy.png", "Snowy"),
+                ("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\rainy-day.png", "Rainy")
+            };
+
+            // Initialize weather icons
+            foreach (var (filePath, iconName) in iconData)
+            {
+                var icon = new PictureBox
+                {
+                    Size = new Size(60, 60),
+                    Location = new Point(18, 64),
+                    Image = Image.FromFile(filePath),
+                    SizeMode = PictureBoxSizeMode.StretchImage,
+                    Tag = iconName // I may use this for api selections
+                };
+                WeatherIcons.Add(icon);
+            }
+            Mainpnl.Controls.Add(WeatherIcons[0]);
+
+            // Update the icon dynamically based on API data
+            void UpdateWeatherIcon(int weatherIndex)
+            {
+                if (weatherIndex >= 0 && weatherIndex < WeatherIcons.Count)
+                {
+                    // Clear current icons
+                    Mainpnl.Controls.Clear();
+
+                    // Add the selected icon
+                    Mainpnl.Controls.Add(WeatherIcons[weatherIndex]);
+                }
+            }
+
 
 
             // Minimize and close 
@@ -244,7 +244,7 @@ namespace WeatherApp
                 }
             };
 
-            // Handle MouseMove event to drag the form
+            // Handling MouseMove event to drag the form
             Mainpnl.MouseMove += (sender, e) =>
             {
                 // ToggleRendering();
@@ -254,7 +254,7 @@ namespace WeatherApp
                 }
             };
 
-            // Handle MouseUp event to stop dragging
+            // Handling MouseUp event to stop dragging
             Mainpnl.MouseUp += (sender, e) =>
             {
                 if (e.Button == MouseButtons.Left)
@@ -276,277 +276,86 @@ namespace WeatherApp
 
 
 
-
-            // Airquality Panel
-            Panel airqualitypnl = new Panel();
-            airqualitypnl.Location = new Point(20, 180);
-            airqualitypnl.BackColor = Color.Transparent;
-            airqualitypnl.Size = new Size(100, 35);
-
-
-            Label airqualitylbl = new Label()
-            {
-                Text = "Air Quality",
-                Location = new Point(0, 0),
-                Font = new Font("Segoe UI", 10F,FontStyle.Bold),
-                ForeColor = Color.White
-            };
-            Label airquality = new Label()
-            {
-                Text = "100",
-                Location = new Point(0, 20),
-                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
-                ForeColor = Color.White
-            };
-            Picture airqualityinfo = new Picture();
-            airqualityinfo.setImage("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\question-mark.png", 15, 15);
-            airqualityinfo.Location = new Point(80, 2);
-            airqualityinfo.MouseClick += (sender, e) =>
-            {
-                if (e.Button == MouseButtons.Left)
-                {
-                    MessageBox.Show("Air quality is a measure of how clean or polluted the air is. A value of 100 is considered to be the best air quality.");
-                }
-            };
-            airqualitypnl.Controls.Add(airqualityinfo);
-            airqualitypnl.Controls.Add(airquality);
-            airqualitypnl.Controls.Add(airqualitylbl);
+            // Air Quality Panel
+            Panel airqualitypnl = Functions.CreateInfoPanel("Air Quality", "100",
+                "Air quality is a measure of how clean or polluted the air is. A value of 100 is considered to be the best air quality.",
+                new Point(20, 180));
 
             // Wind Panel
-            Panel windpnl = new Panel();
-            windpnl.Location = new Point(160, 180);
-            windpnl.BackColor = Color.Transparent;
-            windpnl.Size = new Size(100, 35);
-            Label windlbl = new Label()
-            {
-                Text = "Wind",
-                Location = new Point(0, 0),
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = Color.White
-            };
-            int windSpeed = 10;
-            char windDirection = 'N';
-            Label wind = new Label()
-            {
-                
-                Text = $"{windDirection} {windSpeed} km/h",
-                Location = new Point(0, 20),
-                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
-                ForeColor = Color.White
-            };
-            Picture windinfo = new Picture();
-            windinfo.setImage("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\question-mark.png", 15, 15);
-            windinfo.Location = new Point(80, 2);
-            windinfo.MouseClick += (sender, e) =>
-            {
-                if (e.Button == MouseButtons.Left)
-                {
-                    MessageBox.Show("Wind speed is the speed of the wind in km/h. Wind direction is the direction from which the wind is coming from.");
-                }
-            };
-            windpnl.Controls.Add(windinfo);
+            Panel windpnl = Functions.CreateInfoPanel("Wind", "N 10 km/h",
+                "Wind speed is the speed of the wind in km/h. Wind direction is the direction from which the wind is coming from.",
+                new Point(160, 180));
 
-
-            windpnl.Controls.Add(wind);
-            windpnl.Controls.Add(windlbl);
-
-            // Pressure
-            Panel pressurepnl = new Panel();
-            pressurepnl.Location = new Point(20, 220);
-            pressurepnl.BackColor = Color.Transparent;
-            pressurepnl.Size = new Size(100, 35);
-            Label pressurelbl = new Label()
-            {
-                Text = "Pressure",
-                Location = new Point(0, 0),
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = Color.White
-            };
-            Label pressure = new Label() {
-                Text = "1000 hPa",
-                Location = new Point(0, 20),
-                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
-                ForeColor = Color.White
-            };
-            Picture pressureinfo = new Picture();
-            pressureinfo.setImage("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\question-mark.png", 15, 15);
-            pressureinfo.Location = new Point(80, 2);
-            pressureinfo.MouseClick += (sender, e) =>
-            {
-                if (e.Button == MouseButtons.Left)
-                {
-                    MessageBox.Show("Pressure is the force exerted by the air above a given point. It is measured in hectopascals (hPa).");
-                }
-            };
-            pressurepnl.Controls.Add(pressureinfo);
-            pressurepnl.Controls.Add(pressurelbl);
-            pressurepnl.Controls.Add(pressure);
+            // Pressure Panel
+            Panel pressurepnl = Functions.CreateInfoPanel("Pressure", "1000 hPa",
+                "Pressure is the force exerted by the air above a given point. It is measured in hectopascals (hPa).",
+                new Point(20, 220));
 
             // Dew Point Panel
-            Panel dewpointpnl = new Panel();
-            dewpointpnl.Location = new Point(160, 220);
-            dewpointpnl.BackColor = Color.Transparent;
-            dewpointpnl.Size = new Size(100, 35);
-            Label dewpointlbl = new Label()
-            {
-                Text = "Dew Point",
-                Location = new Point(0, 0),
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = Color.White
-            };
-            int dewPoint = 10;
-            Label dewpoint = new Label()
-            {
-                Text = $"{dewPoint}°",
-                Location = new Point(0, 20),
-                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
-                ForeColor = Color.White
-            };
-            Picture dewpointinfo = new Picture();
-            dewpointinfo.setImage("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\question-mark.png", 15, 15);
-            dewpointinfo.Location = new Point(80, 2);
-            dewpointinfo.MouseClick += (sender, e) =>
-            {
-                if (e.Button == MouseButtons.Left)
-                {
-                    MessageBox.Show("Dew point is the temperature at which air becomes saturated with water vapor and dew can form.");
-                }
-            };
-            
-            dewpointpnl.Controls.Add(dewpointinfo);
-            dewpointpnl.Controls.Add(dewpoint);
-            dewpointpnl.Controls.Add(dewpointlbl);
+            Panel dewpointpnl = Functions.CreateInfoPanel("Dew Point", "10°",
+                "Dew point is the temperature at which air becomes saturated with water vapor and dew can form.",
+                new Point(160, 220));
 
-            Controls.Add(Mainpnl);
-            Mainpnl.Controls.Add(pressurepnl);
-            Mainpnl.Controls.Add(windpnl);
-            Mainpnl.Controls.Add(airqualitypnl);
-            Mainpnl.Controls.Add(dewpointpnl);
+
+            this.SuspendLayout();
+           
+            // Days Panel
+            DaysPanel TempDaysPnl = new DaysPanel();
+            int[] dayprecedence = Functions.ManageDays();
+
+            for (int i = 0; i < 7; i++)
+            {
+                Panel dayPanel = new Panel()
+                {
+                    BackColor = Color.Transparent,
+                    Size = new Size(245, 20)
+                };
+
+                Label dayLabel = new Label()
+                {
+                    Text = i == 0 ? "Today" : Days[dayprecedence[i]],
+                    Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                    ForeColor = Color.White,
+                };
+
+                dayPanel.Controls.Add(dayLabel);
+                TempDaysPnl.Controls.Add(dayPanel);
+            }
+            this.ResumeLayout(false);
+
             Mainpnl.Controls.Add(maximizebtn);
             Mainpnl.Controls.Add(minimizebtn);
             Mainpnl.Controls.Add(sidebarbtn);
+            Mainpnl.Controls.Add(dewpointpnl);
+            Mainpnl.Controls.Add(templbl);
+            Mainpnl.Controls.Add(airqualitypnl);
             Mainpnl.Controls.Add(TempScaleToggle);
-
             Mainpnl.Controls.Add(Feelslike);
             Mainpnl.Controls.Add(locationlbl);
-            Controls.Add(Menupnl);
+            Mainpnl.Controls.Add(pressurepnl);
+            Mainpnl.Controls.Add(windpnl);
+            Mainpnl.Controls.Add(TempDaysPnl);
+
             Menupnl.Controls.Add(CityList);
-            Mainpnl.Controls.Add(templbl);
 
+            Controls.Add(Mainpnl);
+            Controls.Add(Menupnl);
         }
-
-       
-
-        // Temperature conversion methods
-        public int FtoC(int F)
-        {
-            return Convert.ToInt32(0.556 * (F - 32));
-        }
-        public int CtoF(int C)
-        {
-            return Convert.ToInt32((1.8 * C) + 32);
-        }
-
-
-        // Hamburger menu
-        class Picture : PictureBox
-        {
-            Bitmap? icon;
-            public Picture()
-            {
-                DoubleBuffered = true;
-            }
-            public void setImage(String fileDestination, int xSize, int ySize)
-            {
-                if (icon != null)
-                {
-                    icon.Dispose();
-                }
-
-                SizeMode = PictureBoxSizeMode.StretchImage;
-                icon = new Bitmap(fileDestination);
-                ClientSize = new Size(xSize, ySize);
-                Image = (Image)icon;
-            }
-
-            public void setImage(String fileDestination)
-            {
-                if (icon != null)
-                {
-                    icon.Dispose();
-                }
-
-                SizeMode = PictureBoxSizeMode.AutoSize;
-                icon = new Bitmap(fileDestination);
-                Image = (Image)icon;
-            }
-            
-            public Picture CreateIcon(int xSize, int ySize, String fileDestination, Point point)
-            {
-                Picture icon = new Picture();
-                icon.Location = point;
-                icon.setImage(fileDestination, xSize, ySize);
-                return icon;
-            }
-        }
-        // Render Controller
-        private void ToggleRendering()
-        {
-            isRenderingPaused = !isRenderingPaused;
-        }
-
-        class MainPanel : Panel
-        {
-            public MainPanel()
-            {
-                DoubleBuffered = true;
-            }
-            protected override void OnPaint(PaintEventArgs e)
-            {
-                base.OnPaint(e);
-                if (isRenderingPaused) return;
-            }
-        }
-
-
-        // Menu panel
-        class MenuPanel : Panel
-        {
-            public MenuPanel()
-            {
-                DoubleBuffered = true;
-            }
-            protected override void OnPaint(PaintEventArgs e)
-            {
-                base.OnPaint(e);
-                GraphicsPath path = new GraphicsPath();
-                float radius = 15;
-                Rectangle rect = new Rectangle(0, 0, this.Width, this.Height);
-                path.StartFigure();
-                path.AddArc(rect.X, rect.Y, radius, radius, 180, 90);
-                path.AddArc(rect.Right - radius, rect.Y, radius, radius, 270, 90);
-                path.AddArc(rect.Right - radius, rect.Bottom - radius, radius, radius, 0, 90);
-                path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90);
-                path.CloseFigure();
-                this.Region = new Region(path);
-                if (isRenderingPaused) return;
-            }
-        }
-
-
 
         // Gradient Background On Form
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
+            if (isRenderingPaused) return;
+
             Rectangle gradientRect = new Rectangle(0, 0, 300, 500);
             LinearGradientBrush brush = new LinearGradientBrush
-                (
-                    gradientRect, 
-                    ColorTranslator.FromHtml("#0061ff"), 
-                    ColorTranslator.FromHtml("#60efff"), 
-                    65f
-                );
+            (
+                gradientRect,
+                ColorTranslator.FromHtml("#0061ff"),
+                ColorTranslator.FromHtml("#60efff"),
+                65f
+            );
 
             e.Graphics.FillRectangle(brush, gradientRect);
 
@@ -562,7 +371,6 @@ namespace WeatherApp
             path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90);
             path.CloseFigure();
             this.Region = new Region(path);
-            if (isRenderingPaused) return;
         }
     }
 }
