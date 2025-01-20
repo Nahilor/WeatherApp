@@ -35,42 +35,37 @@
         }
 
         // Method to Create Panels with Common Functionality
-        public static Panel CreateInfoPanel(string label, string value, string infoMessage, Point location)
+        internal static Control[] CreateInfoControls(string label, string value, string infoMessage, Point[] location)
         {
-            Panel panel = new Panel
-            {
-                Location = location,
-                BackColor = Color.Transparent,
-                Size = new Size(100, 35),
-                Padding = new Padding(5)
-            };
+            var controls = new Control[3];
 
             Label titleLabel = new Label
             {
                 Text = label,
-                Location = new Point(0, 0),
+                Location = location[0],
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.White,
                 AutoSize = true
             };
+            controls[0] = (titleLabel);
 
             Label valueLabel = new Label
             {
                 Text = value,
-                Location = new Point(0, 20),
+                Location = location[1],
                 Font = new Font("Segoe UI", 8F, FontStyle.Bold),
                 ForeColor = Color.White,
                 AutoSize = true
             };
+            controls[1] = valueLabel;
 
-            PictureBox infoIcon = new PictureBox
+            Picture infoIcon = new Picture
             {
                 Size = new Size(15, 15),
-                Location = new Point(82, 2),
-                Image = Image.FromFile("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\question-mark.png"),
-                SizeMode = PictureBoxSizeMode.StretchImage,
-                Cursor = Cursors.Hand
+                Location = location[2],
             };
+            infoIcon.setImage("C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\question-mark.png", 15, 15);
+            controls[2] = infoIcon;
 
             // Info Icon Click Event
             infoIcon.MouseClick += (sender, e) =>
@@ -81,18 +76,7 @@
                 }
             };
 
-            // Add controls to panel
-            panel.Controls.Add(titleLabel);
-            panel.Controls.Add(valueLabel);
-            panel.Controls.Add(infoIcon);
-
-            // Enable Double Buffering for Smooth Rendering
-            panel.GetType().GetProperty("DoubleBuffered",
-                System.Reflection.BindingFlags.NonPublic |
-                System.Reflection.BindingFlags.Instance)
-                ?.SetValue(panel, true, null);
-
-            return panel;
+            return controls;
         }
     }
 }

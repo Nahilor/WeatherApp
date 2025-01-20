@@ -2,18 +2,14 @@
 
 namespace WeatherApp.Views
 {
-    internal class DaysPanel : TableLayoutPanel
+    internal class DaysPanel : Panel
     {
         public DaysPanel()
         {
             DoubleBuffered = true;
             Size = new Size(260, 190);
             Location = new Point(20, 275);
-            //BackColor = ColorTranslator.FromHtml("#3D5A6C");
-            BackColor = Color.FromArgb(128, 69, 90, 108);
-            Padding = new Padding(5);
-            ColumnCount = 1;
-            RowCount = 7;
+            BackColor = ColorTranslator.FromHtml("#3D5A6C");
         }
 
         protected override void OnResize(EventArgs e)
@@ -24,6 +20,7 @@ namespace WeatherApp.Views
 
         private void UpdateRoundedCorners()
         {
+            if (WeatherGui.isRenderingPaused) return;
             GraphicsPath path = new GraphicsPath();
             int radius = 20;
             Rectangle rect = new Rectangle(0, 0, Width, Height);

@@ -19,7 +19,7 @@ namespace WeatherApp.Views
                 {
                     icon.Dispose();
                 }
-
+                Cursor = Cursors.Hand;
                 SizeMode = PictureBoxSizeMode.StretchImage;
                 icon = new Bitmap(fileDestination);
                 ClientSize = new Size(xSize, ySize);
