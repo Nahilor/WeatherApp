@@ -25,9 +25,9 @@ namespace WeatherApp
 
         static void DisplayWeather(Root weatherData)
         {
-            Console.WriteLine($"City: {weatherData.City.Name}");
-            Console.WriteLine($"Temperature: {weatherData.List[0].Main.Temp}°C");
-            Console.WriteLine($"Weather: {weatherData.List[0].Weather[0].Description}");
+            Console.WriteLine($"City: {weatherData.city.name}");
+            Console.WriteLine($"Temperature: {weatherData.list[0].main.temp}°C");
+            Console.WriteLine($"Weather: {weatherData.list[0].weather[0].description}");
         }
     }
 }
