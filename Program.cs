@@ -1,17 +1,33 @@
+using System;
+using System.Threading.Tasks;
+using WeatherApp.Models;
+using WeatherApp.Services;
+
 namespace WeatherApp
 {
-    internal static class Program
+    class Program
     {
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main()
+        static async Task Main(string[] args)
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
-            ApplicationConfiguration.Initialize();
-            Application.Run(new WeatherGui());
+            double latitude = 9.03;  // Latitude for Addis Ababa
+            double longitude = 38.74; // Longitude for Addis Ababa
+
+            var weatherData = await ApiService.GetWeather(latitude, longitude);
+            if (weatherData != null)
+            {
+                DisplayWeather(weatherData);
+            }
+            else
+            {
+                Console.WriteLine("Failed to retrieve weather data.");
+            }
+        }
+
+        static void DisplayWeather(Root weatherData)
+        {
+            Console.WriteLine($"City: {weatherData.City.Name}");
+            Console.WriteLine($"Temperature: {weatherData.List[0].Main.Temp}°C");
+            Console.WriteLine($"Weather: {weatherData.List[0].Weather[0].Description}");
         }
     }
 }
