@@ -32,12 +32,13 @@
             // 
             // WeatherGui
             // 
-            DoubleBuffered = true;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(288, 441);
+            DoubleBuffered = true;
             Name = "WeatherGui";
             Text = "Weather";
+            Load += WeatherGui_Load;
             ResumeLayout(false);
         }
 
