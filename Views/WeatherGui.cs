@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Drawing.Drawing2D;
+using WeatherApp.Data;
 using WeatherApp.Models;
+using WeatherApp.Services;
 using WeatherApp.Views;
 
 
@@ -8,26 +10,27 @@ namespace WeatherApp
 {
     public partial class WeatherGui : Form
     {
-        Button TempScaleToggle;
-        Label seventhvalue;
-        Label sixthvalue;
-        Label fifthvalue;
-        Label fourthvalue;
-        Label thirdvalue;
-        Label secondvalue;
-        Label firstvalue;
-        Label humidity;
-        Label pressure;
-        Label wind;
-        Label Cloud;
-        Label Feelslike;
-        string icontype = "04d";
-        Picture icon;
-        Label locationlbl;
-        ComboBox CityList;
-        MainPanel Mainpnl;
-        Label templbl;
-        MenuPanel Menupnl;
+        private Button TempScaleToggle;
+        private Label seventhvalue;
+        private Label sixthvalue;
+        private Label fifthvalue;
+        private Label fourthvalue;
+        private Label thirdvalue;
+        private Label secondvalue;
+        private Label firstvalue;
+        private Label humidity;
+        private Label pressure;
+        private Label wind;
+        private Label Cloud;
+        private Label Feelslike;
+        private string icontype = "04d";
+        private Picture icon;
+        private Label locationlbl;
+        private ComboBox CityList;
+        private MainPanel Mainpnl;
+        private Label templbl;
+        private MenuPanel Menupnl;
+
         private int GlobalXPoint = 20;
         private bool menubarpressed = false;
         public static bool isRenderingPaused = false;
@@ -35,6 +38,7 @@ namespace WeatherApp
         private bool isDragging = false;
         private String[] Days = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
         public static int currentday = (int)DateTime.Now.DayOfWeek;
+        private System.Windows.Forms.Timer timer;
 
         public WeatherGui()
         {
@@ -43,6 +47,9 @@ namespace WeatherApp
             this.DoubleBuffered = true;
             FormBorderStyle = FormBorderStyle.None;
             Size = new System.Drawing.Size(300, 500);
+            timer = new System.Windows.Forms.Timer();
+            //              min * sec * millisecond = whole milliseconds
+            timer.Interval = 5 * 60 * 1000;
             InitGui();
         }
 
@@ -178,26 +185,38 @@ namespace WeatherApp
                 if (TempScaleToggle.Text == "°C")
                 {
                     templbl.Text = Convert.ToString(Functions.CtoF(Convert.ToInt32(templbl.Text.Replace('°', ' ')))) + "°";
-                    firstvalue.Text = Functions.ToggleTemperatureCel(firstvalue.Text);
-                    secondvalue.Text = Functions.ToggleTemperatureCel(secondvalue.Text);
-                    thirdvalue.Text = Functions.ToggleTemperatureCel(thirdvalue.Text);
-                    fourthvalue.Text = Functions.ToggleTemperatureCel(fourthvalue.Text);
-                    fifthvalue.Text = Functions.ToggleTemperatureCel(fifthvalue.Text);
-                    sixthvalue.Text = Functions.ToggleTemperatureCel(sixthvalue.Text);
-                    seventhvalue.Text = Functions.ToggleTemperatureCel(seventhvalue.Text);
+                    firstvalue.Text = Convert.ToString(Functions.CtoF(int.Parse(firstvalue.Text.Replace('°', ' ')))) + "°";
+                    secondvalue.Text = Convert.ToString(Functions.CtoF(int.Parse(secondvalue.Text.Replace('°', ' ')))) + "°";
+                    thirdvalue.Text = Convert.ToString(Functions.CtoF(int.Parse(thirdvalue.Text.Replace('°', ' ')))) + "°";
+                    fourthvalue.Text = Convert.ToString(Functions.CtoF(int.Parse(fourthvalue.Text.Replace('°', ' ')))) + "°";
+                    fifthvalue.Text = Convert.ToString(Functions.CtoF(int.Parse(fifthvalue.Text.Replace('°', ' ')))) + "°";
+                    sixthvalue.Text = Convert.ToString(Functions.CtoF(int.Parse(sixthvalue.Text.Replace('°', ' ')))) + "°";
+                    seventhvalue.Text = Convert.ToString(Functions.CtoF(int.Parse(seventhvalue.Text.Replace('°', ' ')))) + "°";
+
+                    string numberStr = Feelslike.Text.Split(new[] { ' ', '°' }, StringSplitOptions.RemoveEmptyEntries)[2];
+                    if (double.TryParse(numberStr, out double number))
+                    {
+                        Feelslike.Text = $"Feels like: {Functions.CtoF(number)} °";
+                    }
                     TempScaleToggle.Text = "°F";
                 }
                 else
                 {
                     templbl.Text = Convert.ToString(Functions.FtoC(Convert.ToInt32(templbl.Text.Replace('°', ' ')))) + "°";
-                    firstvalue.Text = Functions.ToggleTemperatureFeh(firstvalue.Text);
-                    secondvalue.Text = Functions.ToggleTemperatureFeh(secondvalue.Text);
-                    thirdvalue.Text = Functions.ToggleTemperatureFeh(thirdvalue.Text);
-                    fourthvalue.Text = Functions.ToggleTemperatureFeh(fourthvalue.Text);
-                    fifthvalue.Text = Functions.ToggleTemperatureFeh(fifthvalue.Text);
-                    sixthvalue.Text = Functions.ToggleTemperatureFeh(sixthvalue.Text);
-                    seventhvalue.Text = Functions.ToggleTemperatureFeh(seventhvalue.Text);
+                    firstvalue.Text = Convert.ToString(Functions.FtoC(int.Parse(firstvalue.Text.Replace('°', ' ')))) + "°";
+                    secondvalue.Text = Convert.ToString(Functions.FtoC(int.Parse(secondvalue.Text.Replace('°', ' ')))) + "°";
+                    thirdvalue.Text = Convert.ToString(Functions.FtoC(int.Parse(thirdvalue.Text.Replace('°', ' ')))) + "°";
+                    fourthvalue.Text = Convert.ToString(Functions.FtoC(int.Parse(fourthvalue.Text.Replace('°', ' ')))) + "°";
+                    fifthvalue.Text = Convert.ToString(Functions.FtoC(int.Parse(fifthvalue.Text.Replace('°', ' ')))) + "°";
+                    sixthvalue.Text = Convert.ToString(Functions.FtoC(int.Parse(sixthvalue.Text.Replace('°', ' ')))) + "°";
+                    seventhvalue.Text = Convert.ToString(Functions.FtoC(int.Parse(seventhvalue.Text.Replace('°', ' ')))) + "°";
+                    string numberStr = Feelslike.Text.Split(new[] { ' ', '°' }, StringSplitOptions.RemoveEmptyEntries)[2];
+                    if (double.TryParse(numberStr, out double number))
+                    {
+                        Feelslike.Text = $"Feels like: {Functions.FtoC(number)} °";
+                    }
                     TempScaleToggle.Text = "°C";
+
                 }
             };
 
@@ -419,6 +438,9 @@ namespace WeatherApp
                 firstvalue, secondvalue, thirdvalue, fourthvalue, fifthvalue, seventhvalue, sixthvalue
             });
 
+            timer.Tick += OnTimerUpdate;
+
+
             Mainpnl.Controls.Add(closebtn);
             Mainpnl.Controls.Add(minimizebtn);
             Mainpnl.Controls.Add(sidebarbtn);
@@ -472,19 +494,21 @@ namespace WeatherApp
             menubarpressed = false;
             Mainpnl.Location = new Point(0, 0);
             Menupnl.Width = 0;
-            Root api = await WeatherApiService.Get7DayForecastAsync($"{locationlbl.Text}", "ec41ae60ff582e38f9d23b71b591d7a0", "forecast");
-            if (api != null)
+            WeatherDAO weatherDAO = new WeatherDAO("Data Source = Weather.sqlite;Version = 3");
+            WeatherData weatherData = await weatherDAO.GetWeatherDataFromDatabase(locationlbl.Text);
+            if (weatherData != null)
             {
+                // Change Temp with api data
                 TempScaleToggle.Text = "°C";
-                templbl.Text = Convert.ToString(Functions.KtoC(api.list[0].main.temp)) + "°";
-                icontype = $"{api.list[0].weather[0].icon}";
+                templbl.Text = Convert.ToString(Functions.KtoC(weatherData.Temp)) + "°";
+                // Change icon with api data
+                icontype = $"{weatherData.Icon}";
                 icon.Image = Image.FromFile($"C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\{icontype}@2x.png");
                 icon.ClientSize = new Size(80, 80);
 
-
-                Cloud.Text = $"{api.list[0].clouds.all} %";
-                double degree = api.list[0].wind.deg;
-                wind.Text = $"{api.list[0].wind.speed} m/s {(
+                Cloud.Text = $"{weatherData.Cloud} %";
+                double degree = weatherData.WindDeg;
+                wind.Text = $"{weatherData.WindSpeed} m/s {(
                       degree >= 337.5 || degree < 22.5 ? "N" :
                       degree >= 22.5 && degree < 67.5 ? "NE" :
                       degree >= 67.5 && degree < 112.5 ? "E" :
@@ -493,38 +517,83 @@ namespace WeatherApp
                       degree >= 202.5 && degree < 247.5 ? "SW" :
                       degree >= 247.5 && degree < 292.5 ? "W" :
                       "NW")}";
-                humidity.Text = $"{api.list[0].main.humidity} %";
-                pressure.Text = $"{api.list[0].main.pressure} hPa";
+                humidity.Text = $"{weatherData.Humidity} %";
+                pressure.Text = $"{weatherData.Pressure} hPa";
 
+                Feelslike.Text = $"Feels Like: {Functions.KtoC(weatherData.FeelsLike)} °";
+                Mainpnl.BackColor = weatherData.Pod == "n" ? Color.SteelBlue : Color.CadetBlue;
 
-                Feelslike.Text = $"Feels Like: {Functions.KtoC(api.list[0].main.feels_like)} °";
-                Mainpnl.BackColor = api.list[0].sys.pod == "n" ? Color.SteelBlue : Color.CadetBlue;
-
-                firstvalue.Text = $"{Functions.KtoC(api.list[0].main.temp_min)}/{Functions.KtoC(api.list[0].main.temp_max)}";
-                secondvalue.Text = $"{Functions.KtoC(api.list[1].main.temp_min)}/{Functions.KtoC(api.list[1].main.temp_max)}";
-                thirdvalue.Text = $"{Functions.KtoC(api.list[2].main.temp_min)}/{Functions.KtoC(api.list[2].main.temp_max)}";
-                fourthvalue.Text = $"{Functions.KtoC(api.list[3].main.temp_min)}/{Functions.KtoC(api.list[3].main.temp_max)}";
-                fifthvalue.Text = $"{Functions.KtoC(api.list[4].main.temp_min)}/{Functions.KtoC(api.list[4].main.temp_max)}";
-                sixthvalue.Text = $"{Functions.KtoC(api.list[5].main.temp_min)}/{Functions.KtoC(api.list[5].main.temp_max)}";
-                seventhvalue.Text = $"{Functions.KtoC(api.list[6].main.temp_min)}/{Functions.KtoC(api.list[6].main.temp_max)}";
+                firstvalue.Text = $"{Functions.KtoC(weatherData.Monday)}°";
+                secondvalue.Text = $"{Functions.KtoC(weatherData.Tuesday)}°";
+                thirdvalue.Text = $"{Functions.KtoC(weatherData.Wednesday)}°";
+                fourthvalue.Text = $"{Functions.KtoC(weatherData.Thursday)}°";
+                fifthvalue.Text = $"{Functions.KtoC(weatherData.Friday)}°";
+                sixthvalue.Text = $"{Functions.KtoC(weatherData.Saturday)}°";
+                seventhvalue.Text = $"{Functions.KtoC(weatherData.Sunday)}°";
             }
         }
-        private async void WeatherGui_Load(object sender, EventArgs e)
+
+        private async void OnTimerUpdate(object sender, EventArgs e)
         {
-            Root api = await WeatherApiService.Get7DayForecastAsync($"{locationlbl.Text}", "ec41ae60ff582e38f9d23b71b591d7a0", "forecast");
-            if (api != null)
+            timer.Stop();
+            WeatherDAO weatherDAO = new WeatherDAO("Data Source = Weather.sqlite;Version = 3");
+            WeatherData weatherData = await weatherDAO.GetWeatherDataFromDatabase(locationlbl.Text);
+            if (weatherData != null)
             {
                 // Change Temp with api data
                 TempScaleToggle.Text = "°C";
-                templbl.Text = Convert.ToString(Functions.KtoC(api.list[0].main.temp)) + "°";
+                templbl.Text = Convert.ToString(Functions.KtoC(weatherData.Temp)) + "°";
                 // Change icon with api data
-                icontype = $"{api.list[0].weather[0].icon}";
+                icontype = $"{weatherData.Icon}";
                 icon.Image = Image.FromFile($"C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\{icontype}@2x.png");
                 icon.ClientSize = new Size(80, 80);
 
-                Cloud.Text = $"{api.list[0].clouds.all} %";
-                double degree = api.list[0].wind.deg;
-                wind.Text = $"{api.list[0].wind.speed} m/s {(
+                Cloud.Text = $"{weatherData.Cloud} %";
+                double degree = weatherData.WindDeg;
+                wind.Text = $"{weatherData.WindSpeed} m/s {(
+                      degree >= 337.5 || degree < 22.5 ? "N" :
+                      degree >= 22.5 && degree < 67.5 ? "NE" :
+                      degree >= 67.5 && degree < 112.5 ? "E" :
+                      degree >= 112.5 && degree < 157.5 ? "SE" :
+                      degree >= 157.5 && degree < 202.5 ? "S" :
+                      degree >= 202.5 && degree < 247.5 ? "SW" :
+                      degree >= 247.5 && degree < 292.5 ? "W" :
+                      "NW")}";
+                humidity.Text = $"{weatherData.Humidity} %";
+                pressure.Text = $"{weatherData.Pressure} hPa";
+
+                Feelslike.Text = $"Feels Like: {Functions.KtoC(weatherData.FeelsLike)} °";
+                Mainpnl.BackColor = weatherData.Pod == "n" ? Color.SteelBlue : Color.CadetBlue;
+
+                firstvalue.Text = $"{Functions.KtoC(weatherData.Monday)}°";
+                secondvalue.Text = $"{Functions.KtoC(weatherData.Tuesday)}°";
+                thirdvalue.Text = $"{Functions.KtoC(weatherData.Wednesday)}°";
+                fourthvalue.Text = $"{Functions.KtoC(weatherData.Thursday)}°";
+                fifthvalue.Text = $"{Functions.KtoC(weatherData.Friday)}°";
+                sixthvalue.Text = $"{Functions.KtoC(weatherData.Saturday)}°";
+                seventhvalue.Text = $"{Functions.KtoC(weatherData.Sunday)}°";
+                timer.Start();
+            }
+        }
+
+        private async void WeatherGui_Load(object sender, EventArgs e)
+        {
+            WeatherDAO weatherDAO = new WeatherDAO("Data Source = Weather.sqlite;Version = 3");
+            WeatherData weatherData = await weatherDAO.GetWeatherDataFromDatabase(locationlbl.Text);
+            timer.Start();
+            if (weatherData != null)
+            {
+                // Change Temp with api data
+                TempScaleToggle.Text = "°C";
+                templbl.Text = Convert.ToString(Functions.KtoC(weatherData.Temp)) + "°";
+                // Change icon with api data
+                icontype = $"{weatherData.Icon}";
+                icon.Image = Image.FromFile($"C:\\Users\\Nahilor\\source\\repos\\Nahilor\\WeatherApp\\Assets\\{icontype}@2x.png");
+                icon.ClientSize = new Size(80, 80);
+
+                Cloud.Text = $"{weatherData.Cloud} %";
+                double degree = weatherData.WindDeg;
+                wind.Text = $"{weatherData.WindSpeed} m/s {(
                       degree >= 337.5 || degree < 22.5 ? "N" :
                       degree >= 22.5 && degree < 67.5 ? "NE" :
                       degree >= 67.5 && degree < 112.5 ? "E" :
@@ -534,19 +603,19 @@ namespace WeatherApp
                       degree >= 247.5 && degree < 292.5 ? "W" :
                       "NW")
                 }";
-                humidity.Text = $"{api.list[0].main.humidity} %";
-                pressure.Text = $"{api.list[0].main.pressure} hPa";
+                humidity.Text = $"{weatherData.Humidity} %";
+                pressure.Text = $"{weatherData.Pressure} hPa";
 
-                Feelslike.Text = $"Feels Like: {Functions.KtoC(api.list[0].main.feels_like)} °";
-                Mainpnl.BackColor = api.list[0].sys.pod == "n" ? Color.SteelBlue : Color.CadetBlue;
+                Feelslike.Text = $"Feels Like: {Functions.KtoC(weatherData.FeelsLike)} °";
+                Mainpnl.BackColor = weatherData.Pod == "n" ? Color.SteelBlue : Color.CadetBlue;
 
-                firstvalue.Text = $"{Functions.KtoC(api.list[0].main.temp_min)}/{Functions.KtoC(api.list[0].main.temp_max)}";
-                secondvalue.Text = $"{Functions.KtoC(api.list[1].main.temp_min)}/{Functions.KtoC(api.list[1].main.temp_max)}";
-                thirdvalue.Text = $"{Functions.KtoC(api.list[2].main.temp_min)}/{Functions.KtoC(api.list[2].main.temp_max)}";
-                fourthvalue.Text = $"{Functions.KtoC(api.list[3].main.temp_min)}/{Functions.KtoC(api.list[3].main.temp_max)}";
-                fifthvalue.Text = $"{Functions.KtoC(api.list[4].main.temp_min)}/{Functions.KtoC(api.list[4].main.temp_max)}";
-                sixthvalue.Text = $"{Functions.KtoC(api.list[5].main.temp_min)}/{Functions.KtoC(api.list[5].main.temp_max)}";
-                seventhvalue.Text = $"{Functions.KtoC(api.list[6].main.temp_min)}/{Functions.KtoC(api.list[6].main.temp_max)}";
+                firstvalue.Text = $"{Functions.KtoC(weatherData.Monday)}°";
+                secondvalue.Text = $"{Functions.KtoC(weatherData.Tuesday)}°";
+                thirdvalue.Text = $"{Functions.KtoC(weatherData.Wednesday)}°";
+                fourthvalue.Text = $"{Functions.KtoC(weatherData.Thursday)}°";
+                fifthvalue.Text = $"{Functions.KtoC(weatherData.Friday)}°";
+                sixthvalue.Text = $"{Functions.KtoC(weatherData.Saturday)}°";
+                seventhvalue.Text = $"{Functions.KtoC(weatherData.Sunday)}°";
             }
         }
     }

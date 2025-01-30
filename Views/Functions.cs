@@ -51,11 +51,11 @@
         }
 
         // Temperature conversion methods
-        internal static int FtoC(int F)
+        internal static int FtoC(double F)
         {
             return Convert.ToInt32(0.556 * (F - 32));
         }
-        internal static int CtoF(int C)
+        internal static int CtoF(double C)
         {
             return Convert.ToInt32((1.8 * C) + 32);
         }
